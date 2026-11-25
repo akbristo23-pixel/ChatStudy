@@ -77,40 +77,70 @@ Client-server chat applications are foundational to real-time communication over
 
 server.py
 ```
+
 import socket
-from datetime import datetime
 
-s = socket.socket()
-s.bind(('localhost', 8000))
-s.listen(5)
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-print("Server waiting for connection...")
-c, addr = s.accept()
-print("Client Address:", addr)
+server.bind(('localhost', 12345))
 
-now = datetime.now()
-c.send(now.strftime("%d/%m/%Y %H:%M:%S").encode())
+server.listen(1)
 
-ack = c.recv(1024).decode()
-if ack:
-    print(ack)
+print("Server Started...")
+print("Waiting for Client...")
 
-c.close()
-s.close()
+client, address = server.accept()
+
+print("Client Connected:", address)
+
+while True:
+    message = client.recv(1024).decode()
+
+    if message.lower() == "exit":
+        print("Client Disconnected")
+        break
+
+    print("Client:", message)
+
+    reply = input("Server: ")
+
+    client.send(reply.encode())
+
+    if reply.lower() == "exit":
+        break
+
+client.close()
+server.close()
+
 ```
 client.py
 ```
+
 import socket
 
-s = socket.socket()
-s.connect(('localhost', 8000))
-print("Client Socket:", s.getsockname())
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-data = s.recv(1024).decode()
-print("Server Date & Time:", data)
+client.connect(('localhost', 12345))
 
-s.send("Acknowledgement received from client".encode())
-s.close()
+print("Connected to Server")
+
+while True:
+    message = input("Client: ")
+
+    client.send(message.encode())
+
+    if message.lower() == "exit":
+        break
+
+    reply = client.recv(1024).decode()
+
+    if reply.lower() == "exit":
+        print("Server Disconnected")
+        break
+
+    print("Server:", reply)
+
+client.close()
 ```
 ## OUTPUT:
 client.py
